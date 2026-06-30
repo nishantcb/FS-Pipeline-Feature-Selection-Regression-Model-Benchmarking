@@ -1,0 +1,13 @@
+numpy>=1.24
+pandas>=1.5
+scipy>=1.10
+scikit-learn>=1.3
+
+# Optional, but required to use the corresponding FS method:
+lightgbm>=4.0          # required for: --methods lgbm
+skrebate>=0.7           # required for: --methods relieff
+mrmr_selection>=0.2.6   # required for: --methods mrmr   (provides `import mrmr`)
+Boruta>=0.3              # required for: --methods boruta
+
+# Optional, for model training (auto_new1_scaler.py / Auto_bash.sh):
+xgboost>=2.0            # required for: -m XGB / -m ALL
