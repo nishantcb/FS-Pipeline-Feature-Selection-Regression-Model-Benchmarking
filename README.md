@@ -10,10 +10,6 @@ A parameterized command-line pipeline that:
    MAE / RMSE / Pearson correlation / R² on 5-fold CV and on a held-out
    validation set.
 
-It was converted from an exploratory Jupyter notebook into a reusable,
-fully argument-driven CLI tool, with several correctness bugs found in the
-original notebook fixed along the way (see [Bug fixes](#bug-fixes-from-the-original-notebook)).
-
 ## Contents
 
 | File | Purpose |
@@ -238,46 +234,6 @@ features by default (`--skip-scaling` disables this).
 `LAS` (Lasso), `RID` (Ridge), `ENR` (Elastic Net), `SVR`, `MLP`, `AD`
 (AdaBoost), `GBR` (Gradient Boosting), `XGB` (XGBoost, optional). Use `-m ALL`
 to run every available algorithm.
-
-## Bug fixes from the original notebook
-
-This pipeline started life as an exploratory Jupyter notebook. While
-converting it, the following real correctness bugs were found and fixed:
-
-1. **Every FS method except Lasso used Lasso's ranking.** In the original
-   notebook, the loops for ElasticNet, RandomForest, LGBM, Information Gain,
-   ReliefF, MRMR, KBest, and Boruta all mistakenly selected
-   `sorted_coef_lasso.head(size)` (Lasso's top features) instead of their
-   own computed ranking (`sorted_coef_en`, `sorted_importances_rf`, etc.).
-   In effect, 8 of the 10 "different" feature sets being compared were
-   actually identical to Lasso's. **Fixed:** each method now correctly uses
-   its own ranking.
-
-2. **Tuned hyperparameters were discarded.** In `auto_new1_scaler.py`, when
-   `-p Y` (GridSearchCV) was requested, `clf.best_estimator_` was computed
-   but never reused — the K-fold CV and the final model both re-fit a
-   fresh, default-hyperparameter model (`models[algo]`) instead. Tuning had
-   no effect on reported performance. **Fixed:** the tuned estimator's
-   hyperparameters (via `sklearn.base.clone`) are now used for every
-   subsequent fit.
-
-3. **Alternate label columns leaking into the feature matrix.** The dataset
-   stores several possible regression targets as trailing label columns;
-   the FS pipeline correctly carries all of them through into its output
-   CSVs (so you can pick any one as the target later), but the original
-   training script only dropped the *one* target column it was told about,
-   leaving the other label columns sitting in `X` as if they were real
-   features (including non-numeric ones, which crashed numeric models
-   outright). **Fixed:** added `-dc / --drop-cols` to `auto_new1_scaler.py`
-   (and threaded it through `Auto_bash.sh` and `run_pipeline.py`) so all
-   non-target label columns are explicitly excluded from the feature matrix.
-
-4. **Path bugs in `Auto_bash.sh`.** The error message referenced a
-   non-existent `listDT` file instead of `list`, and train/validation file
-   paths were always assumed relative to the run directory, breaking when
-   an absolute path was passed in (as `run_pipeline.py` does). **Fixed:**
-   corrected the error message and made path resolution handle both
-   absolute and relative inputs.
 
 ## Tips
 
